@@ -1,0 +1,9 @@
+<resources>
+	<string name="app_name">BaiduSpeechDemo</string>
+
+
+	<string name="online_speech">在线识别</string>
+	<string name="offline_speech">离线命令词</string>
+
+
+</resources>

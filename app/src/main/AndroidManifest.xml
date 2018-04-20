@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="xwh.baidu.speech"
+          xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<!-- begin: baidu speech sdk  权限 -->
+	<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+	<uses-permission android:name="android.permission.INTERNET"/>
+	<uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+	<!-- end: baidu speech sdk  权限 -->
+	<application
+		android:allowBackup="true"
+		android:icon="@mipmap/ic_launcher"
+		android:label="@string/app_name"
+		android:roundIcon="@mipmap/ic_launcher_round"
+		android:supportsRtl="true"
+		android:theme="@style/AppTheme">
+		<activity android:name=".HomeActivity">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN"/>
+
+				<category android:name="android.intent.category.LAUNCHER"/>
+			</intent-filter>
+		</activity>
+
+		<activity android:name=".OnlineSpeechActivity" />
+
+
+
+		<!-- 正式发布时，请替换成您自己的appId -->
+		<meta-data
+			android:name="com.baidu.speech.APP_ID"
+			android:value="11010002"/>
+		<meta-data
+			android:name="com.baidu.speech.API_KEY"
+			android:value="Cpq8ENGiGNOwo6xBBy9eIEFA"/>
+		<meta-data
+			android:name="com.baidu.speech.SECRET_KEY"
+			android:value="plqejo4S6XUxzP80l9jTbBCHGFChcPB6"/>
+		<!-- 请确认集成后的包名是否正确，本demo的包名是com.baidu.speech.recognizerdemo，在build.gradle文件中查看 -->
+		<service
+			android:name="com.baidu.speech.VoiceRecognitionService"
+			android:exported="false"/>
+
+
+	</application>
+
+</manifest>
