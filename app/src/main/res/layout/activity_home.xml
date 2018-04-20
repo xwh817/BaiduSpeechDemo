@@ -5,6 +5,7 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:padding="12dp"
+	android:orientation="vertical"
 	tools:context="xwh.baidu.speech.HomeActivity">
 
 	<Button
@@ -12,4 +13,10 @@
 		android:layout_height="wrap_content"
 		android:text="@string/online_speech"
 		android:onClick="onlineSpeech"/>
+
+	<Button
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/offline_speech"
+		android:onClick="offlineSpeech"/>
 </LinearLayout>

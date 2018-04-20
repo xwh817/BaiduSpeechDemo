@@ -17,4 +17,9 @@ public class HomeActivity extends AppCompatActivity {
 		Intent intent = new Intent(this, OnlineSpeechActivity.class);
 		startActivity(intent);
 	}
+
+	public void offlineSpeech(View view) {
+		Intent intent = new Intent(this, OfflineSpeechActivity.class);
+		startActivity(intent);
+	}
 }
