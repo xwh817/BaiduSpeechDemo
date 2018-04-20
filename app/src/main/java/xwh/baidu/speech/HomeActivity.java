@@ -22,4 +22,9 @@ public class HomeActivity extends AppCompatActivity {
 		Intent intent = new Intent(this, OfflineSpeechActivity.class);
 		startActivity(intent);
 	}
+
+	public void wakeup(View view) {
+		Intent intent = new Intent(this, WakeupActivity.class);
+		startActivity(intent);
+	}
 }
