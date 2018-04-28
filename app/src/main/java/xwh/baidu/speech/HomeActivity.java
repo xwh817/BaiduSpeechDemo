@@ -27,4 +27,9 @@ public class HomeActivity extends AppCompatActivity {
 		Intent intent = new Intent(this, WakeupActivity.class);
 		startActivity(intent);
 	}
+
+	public void wakeupAndRecog(View view) {
+		Intent intent = new Intent(this, WakeupAndRecogActivity.class);
+		startActivity(intent);
+	}
 }

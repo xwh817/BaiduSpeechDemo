@@ -28,6 +28,7 @@
 		<activity android:name=".OnlineSpeechActivity" />
 		<activity android:name=".OfflineSpeechActivity" />
 		<activity android:name=".WakeupActivity" />
+		<activity android:name=".WakeupAndRecogActivity" />
 
 
 
