@@ -45,7 +45,6 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 		tvParseResult = (TextView) findViewById(R.id.tvParseResult);
 		btnStartRecord = (Button) findViewById(R.id.btnStartRecord);
 		btnStopRecord = (Button) findViewById(R.id.btnStopRecord);
-		btnStopRecord.setVisibility(View.GONE);
 
 		btnStartRecord.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -107,7 +106,7 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 					result = "检测到用户的已经开始说话";
 					startSpeakTime = System.currentTimeMillis();
 				} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_END)) {
-					result = "检测到用户的已经停止说话"+ params + ", during:"+getDuring();
+					result = "检测到用户的已经停止说话"+ params;
 					stopSpeakTime = System.currentTimeMillis();
 				} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_PARTIAL)) {
 					// 临时识别结果, 长语音模式需要从此消息中取出结果
@@ -118,16 +117,16 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 
 						if ("final_result".equals(resultType)) {
 							String best_result = jsonObject.getString("best_result");
-							result = "最终识别结果：" + best_result+", json:" + params + ", during:"+getDuring();
+							result = "最终识别结果：" + best_result;
 
-							long endTime = System.currentTimeMillis();
-							tvParseResult.setText("解析结果：" + best_result + "\n" + "录音结束到解析，耗时：" + (endTime - stopSpeakTime));
+							tvParseResult.append("解析结果：" + best_result+"\n");
 
 						} else if ("nlu_result".equals(resultType)) {
 							String nlu_result = new String(data, offset, length);
-							result = "语义解析结果：" + nlu_result + ", during:"+getDuring();
+							result = "语义解析结果：" + nlu_result;
 						} else {
-							result = "临时识别结果：" + params + ", during:"+getDuring();
+							String best_result = jsonObject.getString("best_result");
+							result = "临时识别结果：" + best_result;
 						}
 
 						} catch (JSONException e) {
@@ -137,9 +136,8 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 
 				} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_FINISH)) {
 					// 识别结束， 最终识别结果或可能的错误
-					result = "识别结束" + params + ", during:"+getDuring();
+					result = "识别结束" ;
 					btnStartRecord.setEnabled(true);
-					//asr.send(SpeechConstant.ASR_STOP, null, null, 0, 0);
 				} else {
 					result = "onEvent: " + name;
 				}
@@ -148,10 +146,6 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 
 			}
 		}); //  EventListener 中 onEvent方法
-	}
-
-	private long getDuring() {
-		return System.currentTimeMillis() - startSpeakTime;
 	}
 
 	private void printResult(String text) {
@@ -164,6 +158,7 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 
 	private void start() {
 		tvResult.setText("");
+		tvParseResult.setText("");
 		btnStartRecord.setEnabled(false);
 
 		String json = getAsrParams().toString(); // 这里可以替换成你需要测试的json
@@ -177,10 +172,11 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 		if (asrParams == null) {
 			try {
 				asrParams = new JSONObject();
-				asrParams.put(SpeechConstant.PID, 15361); // 默认1536
+				asrParams.put(SpeechConstant.PID, 1537); // 默认1536, 语义15361,输入法模型1537
 				asrParams.put(SpeechConstant.DECODER, 0); // 纯在线(默认)
 				asrParams.put(SpeechConstant.VAD, SpeechConstant.VAD_DNN); // 语音活动检测
-				asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 800); // 不开启长语音。开启VAD尾点检测，即静音判断的毫秒数。建议设置800ms-3000ms
+				//asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 800); // 开启VAD尾点检测，即静音判断的毫秒数。建议设置800ms-3000ms
+				asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 0); // VAD_ENDPOINT_TIMEOUT=0 && 输入法模型 开启长语音。
 				asrParams.put(SpeechConstant.ACCEPT_AUDIO_DATA, false);// 是否需要语音音频数据回调
 				asrParams.put(SpeechConstant.ACCEPT_AUDIO_VOLUME, false);// 是否需要语音音量数据回调
 			} catch (JSONException e) {
@@ -191,13 +187,13 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 	}
 
 	private void stop() {
-		asr.send(SpeechConstant.ASR_STOP, null, null, 0, 0);
+		asr.send(SpeechConstant.ASR_CANCEL, null, null, 0, 0);
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		asr.send(SpeechConstant.ASR_CANCEL, "{}", null, 0, 0);
+		stop();
 	}
 
 
