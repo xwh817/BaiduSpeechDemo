@@ -59,7 +59,7 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 		btnStartRecord.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				start();
+				startWakeup();
 			}
 		});
 		btnStopRecord.setOnClickListener(new View.OnClickListener() {
@@ -109,13 +109,20 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 		mWakeuper.registerListener(new EventListener() {
 			@Override
 			public void onEvent(String name, String params, byte[] data, int offset, int length) {
-				String result;
+				String result = null;
 				if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_STARTED)) {
 					result = "进入唤醒";
 				} else if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_READY)) {
 					result = "已准备好唤醒";
 				} else if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_SUCCESS)) {
-					result = "唤醒成功： " + params;
+
+					try {
+						JSONObject json = new JSONObject(params);
+						String word = json.getString("word");
+						result = "唤醒成功： " + word;
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 
 					mWakeuper.send(SpeechConstant.WAKEUP_STOP, null, null, 0, 0);
 					startAsr();
@@ -133,28 +140,28 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 	}
 
 	private void printResult(String text) {
-		tvResult.append(text + "\n\n");
+		tvResult.append(text + "\n");
 		//Log.i("TEst", text);
 	}
 
 
-	private void start() {
+	private void startWakeup() {
 		tvResult.setText("");
+		//tvParseResult.setText("");
 		btnStartRecord.setEnabled(false);
 
 		String json = getWakeupParams().toString(); // 这里可以替换成你需要测试的json
 		mWakeuper.send(SpeechConstant.WAKEUP_START, json, null, 0, 0);
-
-		printResult("启动识别，输入参数：" + json);
 	}
 
 	/**
 	 * 0: 方案1， 唤醒词说完后，直接接句子，中间没有停顿。
 	 * >0 : 方案2： 唤醒词说完后，中间有停顿，然后接句子。推荐4个字 1500ms
 	 * <p>
-	 * backTrackInMs 中间停顿时间，最大 15000，即15s
+	 * backTrackInMs 时间回溯，SDK有15s的录音缓存。如设置为(System.currentTimeMillis() - 1500),表示回溯1.5s的音频。
+	 * https://ai.baidu.com/forum/topic/show/497353
 	 */
-	private int backTrackInMs = 1500;
+	private int backTrackInMs = 0;
 
 
 	private JSONObject mParamsWakeup;
@@ -178,6 +185,7 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 			if (asrParams == null) {
 				asrParams = new JSONObject();
 				asrParams.put(SpeechConstant.PID, 1536); // 默认1536
+				asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 1000); // 开启VAD尾点检测，即静音判断的毫秒数。建议设置800ms-3000ms
 				asrParams.put(SpeechConstant.VAD, SpeechConstant.VAD_DNN); // 语音活动检测
 				asrParams.put(SpeechConstant.ACCEPT_AUDIO_DATA, false);// 是否需要语音音频数据回调
 				asrParams.put(SpeechConstant.ACCEPT_AUDIO_VOLUME, false);// 是否需要语音音量数据回调
@@ -201,15 +209,17 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 		if (asr == null) {
 			asr = EventManagerFactory.create(this, "asr");
 			asr.registerListener(new EventListener() {
+				boolean hasResult = false;
 				@Override
 				public void onEvent(String name, String params, byte[] data, int offset, int length) {
 					String result = null;
 					if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_READY)) {
 						result = "引擎准备就绪，可以开始说话";
+						hasResult = false;
 					} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_BEGIN)) {
 						result = "检测到用户的已经开始说话";
 					} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_END)) {
-						result = "检测到用户的已经停止说话" + params;
+						result = "检测到用户的已经停止说话";
 					} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_PARTIAL)) {
 						// 临时识别结果, 长语音模式需要从此消息中取出结果
 
@@ -219,16 +229,18 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 
 							if ("final_result".equals(resultType)) {
 								String best_result = jsonObject.getString("best_result");
-								result = "最终识别结果：" + best_result + ", json:" + params;
+								result = "最终识别结果：" + best_result;
 
 								long endTime = System.currentTimeMillis();
-								tvParseResult.setText("解析结果：" + best_result);
+								tvParseResult.append("解析结果：" + best_result+"\n");
+								hasResult = true;
 
 							} else if ("nlu_result".equals(resultType)) {
 								String nlu_result = new String(data, offset, length);
 								result = "语义解析结果：" + nlu_result;
 							} else {
-								result = "临时识别结果：" + params;
+								String best_result = jsonObject.getString("best_result");
+								result = "临时识别结果：" + best_result;
 							}
 
 						} catch (JSONException e) {
@@ -238,9 +250,15 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 
 					} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_FINISH)) {
 						// 识别结束， 最终识别结果或可能的错误
-						result = "识别结束" + params;
+						result = "识别结束";
 						btnStartRecord.setEnabled(true);
 						//asr.send(SpeechConstant.ASR_STOP, null, null, 0, 0);
+
+						if (hasResult) {    // 如果有人在说话，就接着识别，如果没有就进入唤醒状态
+							startAsr();
+						} else {
+							startWakeup();
+						}
 					} else {
 						result = "onEvent: " + name;
 					}

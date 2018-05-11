@@ -137,6 +137,7 @@ public class WakeupActivity extends AppCompatActivity {
 
 	private void start() {
 		tvResult.setText("");
+		tvParseResult.setText("");
 		btnStartRecord.setEnabled(false);
 
 		String json = getWakeupParams().toString(); // 这里可以替换成你需要测试的json

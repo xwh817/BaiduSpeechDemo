@@ -28,7 +28,7 @@
 				android:id="@+id/tvResult"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:text="parse_process" />
+				android:text="" />
 		</ScrollView>
 	</LinearLayout>
 	<LinearLayout
@@ -44,7 +44,7 @@
 				android:id="@+id/tvParseResult"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:text="parse_result" />
+				android:text="" />
 		</ScrollView>
 	</LinearLayout>
 </LinearLayout>
