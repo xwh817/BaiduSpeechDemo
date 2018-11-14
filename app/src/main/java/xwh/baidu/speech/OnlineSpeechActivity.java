@@ -55,7 +55,7 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 		btnStopRecord.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				stop();
+				cancel();
 			}
 		});
 	}
@@ -156,7 +156,7 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 	private long startSpeakTime;
 	private long stopSpeakTime;
 
-	private void start() {
+	protected void start() {
 		tvResult.setText("");
 		tvParseResult.setText("");
 		btnStartRecord.setEnabled(false);
@@ -167,16 +167,16 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 		printResult("启动识别，输入参数：" + json);
 	}
 
-	private JSONObject asrParams;
-	private JSONObject getAsrParams() {
+	protected JSONObject asrParams;
+	protected JSONObject getAsrParams() {
 		if (asrParams == null) {
 			try {
 				asrParams = new JSONObject();
-				asrParams.put(SpeechConstant.PID, 1537); // 默认1536, 语义15361,输入法模型1537
+				asrParams.put(SpeechConstant.PID, 1536); // 默认1536, 语义15361,输入法模型1537
 				asrParams.put(SpeechConstant.DECODER, 0); // 纯在线(默认)
 				asrParams.put(SpeechConstant.VAD, SpeechConstant.VAD_DNN); // 语音活动检测
-				//asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 800); // 开启VAD尾点检测，即静音判断的毫秒数。建议设置800ms-3000ms
-				asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 0); // VAD_ENDPOINT_TIMEOUT=0 && 输入法模型 开启长语音。
+				asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 800); // 开启VAD尾点检测，即静音判断的毫秒数。建议设置800ms-3000ms
+				//asrParams.put(SpeechConstant.VAD_ENDPOINT_TIMEOUT, 0); // VAD_ENDPOINT_TIMEOUT=0 && 输入法模型 开启长语音。
 				asrParams.put(SpeechConstant.ACCEPT_AUDIO_DATA, false);// 是否需要语音音频数据回调
 				asrParams.put(SpeechConstant.ACCEPT_AUDIO_VOLUME, false);// 是否需要语音音量数据回调
 			} catch (JSONException e) {
@@ -186,15 +186,23 @@ public class OnlineSpeechActivity extends AppCompatActivity {
 		return asrParams;
 	}
 
-	private void stop() {
+	public void stop() {
+		asr.send(SpeechConstant.ASR_STOP, null, null, 0, 0);
+	}
+
+
+	public void cancel() {
 		asr.send(SpeechConstant.ASR_CANCEL, null, null, 0, 0);
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		stop();
+		cancel();
 	}
 
 
+	public static void stopSpeech() {
+
+	}
 }

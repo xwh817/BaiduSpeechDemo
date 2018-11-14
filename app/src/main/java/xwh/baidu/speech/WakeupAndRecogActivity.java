@@ -155,13 +155,14 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 	}
 
 	/**
-	 * 0: 方案1， 唤醒词说完后，直接接句子，中间没有停顿。
-	 * >0 : 方案2： 唤醒词说完后，中间有停顿，然后接句子。推荐4个字 1500ms
+	 * 唤醒词说完后，然后接句子，是否回溯音频流。（推荐4个字 1500ms， 根据唤醒词测试调整）
+	 * backTrackInMs=0，不回溯音频流，可能出现截断
+	 * backTrackInMs>0，回溯音频流，可能出现多余字符
 	 * <p>
 	 * backTrackInMs 时间回溯，SDK有15s的录音缓存。如设置为(System.currentTimeMillis() - 1500),表示回溯1.5s的音频。
 	 * https://ai.baidu.com/forum/topic/show/497353
 	 */
-	private int backTrackInMs = 0;
+	private int backTrackInMs = 400;
 
 
 	private JSONObject mParamsWakeup;
@@ -191,9 +192,9 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 				asrParams.put(SpeechConstant.ACCEPT_AUDIO_VOLUME, false);// 是否需要语音音量数据回调
 			}
 
-			if (backTrackInMs > 0) { // 方案1， 唤醒词说完后，直接接句子，中间没有停顿。
+			//if (backTrackInMs > 0) { // 方案1， 唤醒词说完后，直接接句子，中间没有停顿。
 				asrParams.put(SpeechConstant.AUDIO_MILLS, System.currentTimeMillis() - backTrackInMs);
-			}
+			//}
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -254,11 +255,13 @@ public class WakeupAndRecogActivity extends AppCompatActivity {
 						btnStartRecord.setEnabled(true);
 						//asr.send(SpeechConstant.ASR_STOP, null, null, 0, 0);
 
-						if (hasResult) {    // 如果有人在说话，就接着识别，如果没有就进入唤醒状态
+						/*if (hasResult) {    // 如果有人在说话，就接着识别，如果没有就进入唤醒状态
 							startAsr();
 						} else {
 							startWakeup();
-						}
+						}*/
+						startWakeup();
+
 					} else {
 						result = "onEvent: " + name;
 					}

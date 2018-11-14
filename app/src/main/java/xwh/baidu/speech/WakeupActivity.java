@@ -167,6 +167,7 @@ public class WakeupActivity extends AppCompatActivity {
 	private void stop() {
 		btnStartRecord.setEnabled(true);
 		asr.send(SpeechConstant.WAKEUP_STOP, null, null, 0, 0);
+		asr.send(SpeechConstant.WAKEUP_UNLOAD_ENGINE, null, null, 0, 0);
 	}
 
 	@Override

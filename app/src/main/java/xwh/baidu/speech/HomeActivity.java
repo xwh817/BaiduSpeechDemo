@@ -32,4 +32,10 @@ public class HomeActivity extends AppCompatActivity {
 		Intent intent = new Intent(this, WakeupAndRecogActivity.class);
 		startActivity(intent);
 	}
+
+	public void localInputRecog(View view) {
+		Intent intent = new Intent(this, LocalSpeechActivity.class);
+		startActivity(intent);
+	}
+
 }
