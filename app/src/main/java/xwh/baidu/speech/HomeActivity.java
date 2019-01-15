@@ -38,4 +38,8 @@ public class HomeActivity extends AppCompatActivity {
 		startActivity(intent);
 	}
 
+	public void bluetoothSpeech(View view) {
+		Intent intent = new Intent(this, BluetoothSpeechActivity.class);
+		startActivity(intent);
+	}
 }

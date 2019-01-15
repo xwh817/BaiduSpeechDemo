@@ -9,6 +9,7 @@
 	<string name="localInput">本地文件识别</string>
 	<string name="start_wakeup">启动唤醒</string>
 	<string name="stop_wakeup">停止唤醒</string>
+	<string name="speech_bluetooth">通过蓝牙识别</string>
 
 
 </resources>

@@ -9,6 +9,12 @@
 	<uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
+	<uses-permission android:name="android.permission.BLUETOOTH" />
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+	<uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED" />
+	<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+
 	<!-- end: baidu speech sdk  权限 -->
 	<application
 		android:allowBackup="true"
@@ -30,6 +36,13 @@
 		<activity android:name=".WakeupActivity" />
 		<activity android:name=".WakeupAndRecogActivity" />
 		<activity android:name=".LocalSpeechActivity" />
+		<activity android:name=".BluetoothSpeechActivity" />
+
+		<receiver android:name=".MediaButtonReceiver" >
+			<intent-filter>
+				<action android:name="android.intent.action.MEDIA_BUTTON" />
+			</intent-filter>
+		</receiver>
 
 
 

@@ -42,4 +42,11 @@
 		android:layout_marginTop="6dp"
 		android:text="@string/localInput"
 		android:onClick="localInputRecog"/>
+
+	<Button
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="6dp"
+		android:text="@string/speech_bluetooth"
+		android:onClick="bluetoothSpeech"/>
 </LinearLayout>
