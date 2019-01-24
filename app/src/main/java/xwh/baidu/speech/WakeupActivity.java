@@ -5,7 +5,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,7 +26,7 @@ import java.util.ArrayList;
  * 2. 应用包名和控制台包名一致
  *
  */
-public class WakeupActivity extends AppCompatActivity {
+public class WakeupActivity extends BaseActivity {
 
 	private Button btnStartRecord;
 	private Button btnStopRecord;

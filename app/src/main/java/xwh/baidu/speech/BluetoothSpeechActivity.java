@@ -12,7 +12,6 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -30,52 +29,33 @@ import java.util.ArrayList;
 
 import xwh.baidu.speech.MediaButtonReceiver.EventObserver;
 
-public class BluetoothSpeechActivity extends AppCompatActivity {
+public class BluetoothSpeechActivity extends BaseActivity {
 
+	private Context mContext;
 	private Button btnStartRecord;
 	private Button btnStopRecord;
 	private TextView tvResult;
 	private TextView tvParseResult;
 	private EventManager asr;
-	private ComponentName mComponentName;
 
-	private Context context;
+	private ComponentName mComponentName;
 	private BluetoothAdapter mBluetoothAdapter;
 	private AudioManager mAudioManager;
+	private BluetoothHeadset bluetoothHeadset;
+	private boolean isBluetoothConnected;
+	private boolean isRecording;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		mContext = this.getApplicationContext();
 
 		initView();
 		initPermission();
 		initListener();
+		initBluetooth();
 
-		context = this.getApplicationContext();
-		initBlueToothHeadset();
-
-		// AudioManager注册一个MediaButton对象
-		mComponentName = new ComponentName(this, MediaButtonReceiver.class);
-		mAudioManager.registerMediaButtonEventReceiver(mComponentName);
-
-		// 切换录音通道
-		mAudioManager.setBluetoothScoOn(true);
-		mAudioManager.startBluetoothSco();
-
-		MediaButtonReceiver.setEventObserver(new EventObserver() {
-			@Override
-			public void onEvent(KeyEvent keyEvent) {
-				if(keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-					int keyCode = keyEvent.getKeyCode();
-					if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY || keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
-						printResult("MediaButtonReceiver: " + keyCode);
-						start();
-					}
-				}
-
-			}
-		});
 	}
 
 	private void initView() {
@@ -99,50 +79,54 @@ public class BluetoothSpeechActivity extends AppCompatActivity {
 	}
 
 
+	protected void initBluetooth() {
+		mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+		// AudioManager注册一个MediaButton对象
+		mComponentName = new ComponentName(mContext, MediaButtonReceiver.class);
+		mAudioManager.registerMediaButtonEventReceiver(mComponentName);
 
+		MediaButtonReceiver.setEventObserver(new EventObserver() {
+			@Override
+			public void onEvent(KeyEvent keyEvent) {
+				if(keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+					int keyCode = keyEvent.getKeyCode();
+					if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY || keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
+						printResult("MediaButtonReceiver: " + keyCode);
+						if (isRecording) {
+							stop();
+						} else {
+							start();
+						}
+					}
+				}
+			}
+		});
 
-	private void initBlueToothHeadset() {
+		mBluetoothAdapter = ((BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
+		mBluetoothAdapter.getProfileProxy(mContext, new BluetoothProfile.ServiceListener(){
+			@Override
+			public void onServiceConnected(int profile, BluetoothProfile proxy) {
+				printResult("onServiceConnected:" + profile);
+				if (profile == BluetoothProfile.HEADSET) {
+					bluetoothHeadset = (BluetoothHeadset) proxy;
+					isBluetoothConnected = true;
+					printResult("使用蓝牙进行录音");
+				}
+			}
 
-		mAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-		mAudioManager.setBluetoothScoOn(true);
-		mAudioManager.startBluetoothSco();
-
-		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {//android4.3之前直接用BluetoothAdapter.getDefaultAdapter()就能得到BluetoothAdapter
-			mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		} else {
-			BluetoothManager bm = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-			mBluetoothAdapter = bm.getAdapter();
-		}
-
-		mBluetoothAdapter.getProfileProxy(context, blueHeadsetListener, BluetoothProfile.HEADSET);
-
+			@Override
+			public void onServiceDisconnected(int profile) {
+				printResult("onServiceDisconnected:" + profile);
+				if (profile == BluetoothProfile.HEADSET) {
+					bluetoothHeadset = null;
+					isBluetoothConnected = false;
+					mAudioManager.stopBluetoothSco();
+					mAudioManager.setBluetoothScoOn(false);
+					printResult("不使用蓝牙录音");
+				}
+			}
+		}, BluetoothProfile.HEADSET);
 	}
-
-	private BluetoothHeadset bluetoothHeadset;
-	BluetoothProfile.ServiceListener blueHeadsetListener = new BluetoothProfile.ServiceListener() {
-
-		@Override
-		public void onServiceDisconnected(int profile) {
-			printResult("blueHeadsetListener: onServiceDisconnected:" + profile);
-			if (profile == BluetoothProfile.HEADSET) {
-				bluetoothHeadset = null;
-			}
-		}
-
-		@Override
-		public void onServiceConnected(int profile, BluetoothProfile proxy) {
-			printResult("blueHeadsetListener: onServiceConnected:" + profile);
-			if (profile == BluetoothProfile.HEADSET) {
-				bluetoothHeadset = (BluetoothHeadset) proxy;
-			}
-		}
-	};
-
-
-
-
-
-
 
 
 	/**
@@ -187,6 +171,7 @@ public class BluetoothSpeechActivity extends AppCompatActivity {
 				String result = null;
 				if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_READY)) {
 					result = "引擎准备就绪，可以开始说话";
+					isRecording = true;
 				} else if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_BEGIN)) {
 					result = "检测到用户的已经开始说话";
 					startSpeakTime = System.currentTimeMillis();
@@ -205,7 +190,7 @@ public class BluetoothSpeechActivity extends AppCompatActivity {
 							result = "最终识别结果：" + best_result;
 
 							tvParseResult.append("解析结果：" + best_result+"\n");
-
+							isRecording =false;
 						} else if ("nlu_result".equals(resultType)) {
 							String nlu_result = new String(data, offset, length);
 							result = "语义解析结果：" + nlu_result;
@@ -223,6 +208,7 @@ public class BluetoothSpeechActivity extends AppCompatActivity {
 					// 识别结束， 最终识别结果或可能的错误
 					result = "识别结束" ;
 					btnStartRecord.setEnabled(true);
+					isRecording =false;
 				} else {
 					result = "onEvent: " + name;
 				}
@@ -242,6 +228,12 @@ public class BluetoothSpeechActivity extends AppCompatActivity {
 	private long stopSpeakTime;
 
 	protected void start() {
+
+		if (isBluetoothConnected) {
+			mAudioManager.setBluetoothScoOn(true);
+			mAudioManager.startBluetoothSco();
+		}
+
 		tvResult.setText("");
 		tvParseResult.setText("");
 		btnStartRecord.setEnabled(false);
@@ -249,7 +241,7 @@ public class BluetoothSpeechActivity extends AppCompatActivity {
 		String json = getAsrParams().toString(); // 这里可以替换成你需要测试的json
 		asr.send(SpeechConstant.ASR_START, json, null, 0, 0);
 
-		printResult("启动识别，输入参数：" + json);
+		printResult("启动识别，isBluetoothConnected: " + isBluetoothConnected + "，输入参数：" + json);
 	}
 
 	protected JSONObject asrParams;
@@ -285,11 +277,12 @@ public class BluetoothSpeechActivity extends AppCompatActivity {
 		super.onDestroy();
 		cancel();
 
-		mAudioManager.setBluetoothScoOn(false);
-		mAudioManager.stopBluetoothSco();
-
-		mBluetoothAdapter.closeProfileProxy(BluetoothProfile.HEADSET, bluetoothHeadset);
-		mAudioManager.unregisterMediaButtonEventReceiver(mComponentName);
+		if (mAudioManager != null) {
+			mAudioManager.unregisterMediaButtonEventReceiver(mComponentName);
+		}
+		if (bluetoothHeadset != null) {
+			mBluetoothAdapter.closeProfileProxy(BluetoothProfile.HEADSET, bluetoothHeadset);
+		}
 	}
 
 

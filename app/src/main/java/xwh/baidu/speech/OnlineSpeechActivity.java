@@ -5,7 +5,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -20,7 +19,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class OnlineSpeechActivity extends AppCompatActivity {
+public class OnlineSpeechActivity extends BaseActivity {
 
 	private Button btnStartRecord;
 	private Button btnStopRecord;
